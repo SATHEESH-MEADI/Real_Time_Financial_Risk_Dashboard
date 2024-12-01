@@ -167,7 +167,7 @@ def create_stock_graphs(df, auto_refresh=True):
     st.subheader("Stock Price Visualization")
     graph_type = st.radio("Select Graph Type", ["Combined Graph", "Individual Graphs"], horizontal=True)
     
-    auto_refresh = st.checkbox("Enable Auto-refresh (30 seconds)", value=True)
+    auto_refresh = st.checkbox("Enable Auto-refresh (30 seconds)", value=False)
     
     # Display key metrics
     st.subheader("Current Stock Metrics")
@@ -310,12 +310,36 @@ def display_optimal_allocations(returns, current_weights):
                 name=column,
                 mode='lines+markers'
             ))
+
+        # fig_metrics.update_layout(
+        #     title="Risk-Return Comparison",
+        #     yaxis_title="Percentage (%)",
+        #     height=400
+        # )
+        # st.plotly_chart(fig_metrics)
+            
         fig_metrics.update_layout(
             title="Risk-Return Comparison",
             yaxis_title="Percentage (%)",
             height=400
         )
         st.plotly_chart(fig_metrics)
+
+        # Concise and creative explanation for the user
+        st.write("""
+        ### Risk vs. Reward - Explained:
+
+        📊 **Risk** is how much your investment moves up and down. Higher means more uncertainty (big swings in price).
+                 
+        💰 **Return** is how much profit you make. The further right you go, the more money you could make.
+
+        The graph shows the **trade-off** between the two:
+        - **Riskier investments** (higher up) might **give you higher returns** (far right).
+        - **Safer investments** (lower) might **offer lower returns** (closer to the left).
+
+        Your goal? Find a place on the graph where **risk and reward** are balanced just right for you!
+        """)
+
 #<-----------------------------------------------CAPM Analysis--------------------------------------------------------->
 def add_analysis_section(df, returns, market_returns, weights, risk_free_rate=0.0):
     st.header("Advanced Analysis")
@@ -331,21 +355,57 @@ def add_analysis_section(df, returns, market_returns, weights, risk_free_rate=0.
                 risk_free_rate
             )
     
+
+    
     capm_df = pd.DataFrame(capm_metrics).T
     st.dataframe(capm_df.style.format("{:.2f}"))
     
+    st.write("""
+    ### What Does CAPM Tell Us?
+
+    CAPM (Capital Asset Pricing Model) helps us figure out whether an investment is **worth the risk**. 
+
+    - **Expected Return**: What we expect to earn. Higher returns come with more risk!
+    - **Risk-Free Rate**: This is what you'd earn from something super safe, like a bond—**guaranteed money**.
+    - **Beta**: Measures how much a stock **dances** with the market. A high Beta means it’s a **wild dancer**, jumping higher (and falling harder), while a low Beta means it’s a **calmer dancer**.
+
+    ### Simple Summary:
+    - **More Risk = More Reward** — But, is it worth it? CAPM helps us decide.
+    - **Beta** shows how risky a stock is: high Beta = more risk (more exciting), low Beta = less risk (more stable).
+
+
+
+    """)
     # Efficient Frontier
     st.subheader("Efficient Frontier")
     portfolio_analysis = PortfolioAnalysis(returns, risk_free_rate)
     efficient_frontier = portfolio_analysis.get_efficient_frontier()
-    
+    # Create the plotly figure
     fig = go.Figure()
+
+    # Plot Efficient Frontier as markers (no lines)
     fig.add_trace(go.Scatter(
         x=efficient_frontier['Volatility'],
         y=efficient_frontier['Return'],
-        mode='lines',
-        name='Efficient Frontier'
+        mode='markers',  # Markers for scatter plot, not lines
+        name='Efficient Frontier',
+        marker=dict(
+            color=efficient_frontier['Return'],  # Color by the return value
+            colorscale='Viridis',  # Apply the Viridis color scale
+            size=10  # Marker size
+        )
     ))
+
+    # Update layout to add labels and title
+    fig.update_layout(
+        title='Efficient Frontier with Return Color Coding',
+        xaxis_title='Volatility (Risk)',
+        yaxis_title='Return',
+        showlegend=True
+    )
+
+
+            
     
     # Add current portfolio point
     current_weights = np.array(list(weights.values()))
@@ -535,7 +595,24 @@ def main():
                         with col2:
                             st.header("Portfolio Performance Metrics")
                             performance_metrics = calculate_performance_metrics(returns, market_returns)
+
+                            # Display the performance metrics as a table
                             st.dataframe(performance_metrics.style.format("{:.2%}"))
+
+                            # Short descriptions for each metric
+                            st.write("""
+### Key Metrics Explained:
+
+📈 **Annual Return**: Expected yearly profit. Higher means better performance.
+
+💨 **Annual Volatility**: Measures price swings. More swings = higher risk.
+
+⚖️ **Sharpe Ratio**: Return for each unit of risk. Higher is better.
+
+🚨 **Max Drawdown**: The largest loss from the peak. Lower is better.
+
+📊 **Beta**: Sensitivity to market changes. Higher means more fluctuation compared to the market.
+""")
 
                         # Optimal Portfolio Allocation
                         if len(stock_returns.columns) > 1:  # Need at least 2 stocks for optimization
