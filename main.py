@@ -10,6 +10,9 @@ from datetime import date, timedelta
 import time
 import scipy.optimize as optimize
 from sklearn.covariance import LedoitWolf
+import statsmodels.api as sm
+import requests
+import os
 
 #<----------------------------------------------Data Fetching Functions---------------------------------------------------------->
 def fetch_data(tickers, start_date, end_date):
@@ -23,22 +26,36 @@ def fetch_data(tickers, start_date, end_date):
     return data
 
 #<------------------------------------------Performance Metrics Calculations-------------------------------------------------------------->
-def calculate_performance_metrics(returns, market_returns, risk_free_rate=0.02):
+
+
+def calculate_performance_metrics(returns, market_returns, risk_free_rate=0.0):
     metrics = {}
+
     market_var = np.var(market_returns)
-    
+
     for ticker in returns.columns:
         ticker_returns = returns[ticker]
+        
+
         volatility = ticker_returns.std() * np.sqrt(252)
         annual_return = ticker_returns.mean() * 252
         
+
         sharpe = (annual_return - risk_free_rate) / volatility if volatility > 0 else 0
-        beta = np.cov(ticker_returns, market_returns)[0, 1] / market_var if market_var > 0 else 0
         
+
+        X = sm.add_constant(market_returns)  
+        y = ticker_returns
+        
+        model = sm.OLS(y, X).fit()  
+        beta = model.params[1]  
+        
+
         cum_returns = (1 + ticker_returns).cumprod()
         drawdowns = (cum_returns - cum_returns.expanding().max()) / cum_returns.expanding().max()
         max_drawdown = drawdowns.min() if len(drawdowns) > 0 else 0
         
+
         metrics[ticker] = {
             'Annual Return': annual_return,
             'Annual Volatility': volatility,
@@ -46,8 +63,10 @@ def calculate_performance_metrics(returns, market_returns, risk_free_rate=0.02):
             'Max Drawdown': max_drawdown,
             'Beta': beta
         }
-    
+
+
     return pd.DataFrame(metrics).T
+
 #<-------------------------------------------------Portfolio Analysis------------------------------------------------------->
 class PortfolioAnalysis:
     def __init__(self, returns_data, risk_free_rate=0.0):
@@ -203,6 +222,7 @@ def create_stock_graphs(df, auto_refresh=True):
     if auto_refresh:
         time.sleep(15)
         st.rerun()
+
 #<-----------------------------------------------Financial Ratios--------------------------------------------------------->
 def calculate_financial_ratios(ticker, period="quarterly"):
     """Calculate financial ratios for a given stock"""
@@ -311,13 +331,6 @@ def display_optimal_allocations(returns, current_weights):
                 mode='lines+markers'
             ))
 
-        # fig_metrics.update_layout(
-        #     title="Risk-Return Comparison",
-        #     yaxis_title="Percentage (%)",
-        #     height=400
-        # )
-        # st.plotly_chart(fig_metrics)
-            
         fig_metrics.update_layout(
             title="Risk-Return Comparison",
             yaxis_title="Percentage (%)",
@@ -325,7 +338,7 @@ def display_optimal_allocations(returns, current_weights):
         )
         st.plotly_chart(fig_metrics)
 
-        # Concise and creative explanation for the user
+
         st.write("""
         ### Risk vs. Reward - Explained:
 
@@ -344,7 +357,7 @@ def display_optimal_allocations(returns, current_weights):
 def add_analysis_section(df, returns, market_returns, weights, risk_free_rate=0.0):
     st.header("Advanced Analysis")
     
-    # CAPM Analysis
+
     st.subheader("CAPM Analysis")
     capm_metrics = {}
     for ticker in returns.columns:
@@ -376,27 +389,27 @@ def add_analysis_section(df, returns, market_returns, weights, risk_free_rate=0.
 
 
     """)
-    # Efficient Frontier
+
     st.subheader("Efficient Frontier")
     portfolio_analysis = PortfolioAnalysis(returns, risk_free_rate)
     efficient_frontier = portfolio_analysis.get_efficient_frontier()
-    # Create the plotly figure
+
     fig = go.Figure()
 
-    # Plot Efficient Frontier as markers (no lines)
+
     fig.add_trace(go.Scatter(
         x=efficient_frontier['Volatility'],
         y=efficient_frontier['Return'],
-        mode='markers',  # Markers for scatter plot, not lines
+        mode='markers',  
         name='Efficient Frontier',
         marker=dict(
-            color=efficient_frontier['Return'],  # Color by the return value
-            colorscale='Viridis',  # Apply the Viridis color scale
-            size=10  # Marker size
+            color=efficient_frontier['Return'],  
+            colorscale='Viridis',  
+            size=10  
         )
     ))
 
-    # Update layout to add labels and title
+
     fig.update_layout(
         title='Efficient Frontier with Return Color Coding',
         xaxis_title='Volatility (Risk)',
@@ -407,7 +420,7 @@ def add_analysis_section(df, returns, market_returns, weights, risk_free_rate=0.
 
             
     
-    # Add current portfolio point
+
     current_weights = np.array(list(weights.values()))
     current_return, current_vol = portfolio_analysis.calculate_portfolio_metrics(current_weights)
     fig.add_trace(go.Scatter(
@@ -426,7 +439,7 @@ def add_analysis_section(df, returns, market_returns, weights, risk_free_rate=0.
     )
     st.plotly_chart(fig)
 #<-------------------------------------------------------------------------Financial Ratio analysis---------------------------------->
-    # Financial Ratios
+
     st.subheader("Financial Ratios Analysis")
     tabs = st.tabs(["Annual","Quarterly"])
     
@@ -477,17 +490,17 @@ def main():
     st.set_page_config(page_title="Financial Risk Analysis Dashboard", layout="wide", initial_sidebar_state="expanded")
     st.title("Financial Risk Analysis Dashboard")
     
-    # Sidebar Configuration
+
     st.sidebar.title("Portfolio Configuration")
     
-    # Date Selection
+
     default_end_date = date.today()
     default_start_date = default_end_date - timedelta(days=365)
     
     start_date = st.sidebar.date_input("Start Date", value=default_start_date, max_value=default_end_date)
     end_date = st.sidebar.date_input("End Date", value=default_end_date, min_value=start_date, max_value=default_end_date)
     
-    # Dynamic Stock Input
+
     stock_input = st.sidebar.text_area(
         "Enter Stock Tickers (one per line)",
         placeholder="e.g.,\nAAPL\nMSFT\nGOOG",
