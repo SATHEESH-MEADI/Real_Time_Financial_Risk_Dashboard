@@ -490,7 +490,7 @@ def add_footer():
         """
         <div style="text-align: center; padding: 20px;">
             <p>©️ 2024 Financial Risk Analysis Dashboard. All rights reserved.</p>
-            <p>Created by Nishanth Hanmanthureddygari</p>
+            <p>Created by Satheesh Meadi</p>
             <p style="font-size: 0.8em;">This project and its content are protected by copyright law. 
             Unauthorized reproduction or distribution of this material is strictly prohibited.</p>
         </div>
