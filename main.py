@@ -610,7 +610,15 @@ def main():
                             performance_metrics = calculate_performance_metrics(returns, market_returns)
 
                             # Display the performance metrics as a table
-                            st.dataframe(performance_metrics.style.format("{:.2%}"))
+                            # st.dataframe(performance_metrics.style.format("{:.2%}"))
+                            st.dataframe(performance_metrics.style.format({
+                            'Annual Return': '{:.2%}',
+                            'Annual Volatility': '{:.2%}',
+                            'Sharpe Ratio': '{:.2f}',   # Sharpe Ratio typically does not need percentage format
+                            'Max Drawdown': '{:.2%}',
+                            'Beta': '{:.2f}'            # Keep Beta in its original decimal format, not as percentage
+                            }))
+
 
                             # Short descriptions for each metric
                             st.write("""
