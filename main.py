@@ -484,7 +484,19 @@ def add_analysis_section(df, returns, market_returns, weights, risk_free_rate=0.
                     st.warning(f"No annual financial data available for {ticker}")
 
 
-
+def add_footer():
+    st.markdown("""---""")  # Adds a horizontal line
+    st.markdown(
+        """
+        <div style="text-align: center; padding: 20px;">
+            <p>©️ 2024 Financial Risk Analysis Dashboard. All rights reserved.</p>
+            <p>Created by Nishanth Hanmanthureddygari</p>
+            <p style="font-size: 0.8em;">This project and its content are protected by copyright law. 
+            Unauthorized reproduction or distribution of this material is strictly prohibited.</p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 #<---------------------------------------------------Main Function ----------------------------------------------------->
 def main():
     st.set_page_config(page_title="Financial Risk Analysis Dashboard", layout="wide", initial_sidebar_state="expanded")
@@ -652,6 +664,7 @@ def main():
             st.info("Please enter at least one valid stock ticker to begin analysis.")
     else:
         st.info("Please enter stock tickers in the sidebar to begin analysis.")
+    add_footer()
 
 
 if __name__ == "__main__":
