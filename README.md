@@ -46,7 +46,7 @@ The **Financial Risk Analysis Dashboard** is an interactive web application buil
 Start by cloning this repository to your local machine:
 
 ```bash
-git clone https://github.com/your-username/financial-risk-analysis-dashboard.git
+git clone https://github.com/SATHEESH-MEADI/Real_Time_Financial_Risk_Dashboard.git
 cd financial-risk-analysis-dashboard
 ```
 
